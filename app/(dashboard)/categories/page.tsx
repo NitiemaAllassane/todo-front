@@ -19,7 +19,10 @@ const mockCategories = [
   { id: "3", name: "Documentation API", taskCount: 1 },
 ];
 
+
 export default function CategoriesPage() {
+  
+  // État pour la Dialog création/édition
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<(typeof mockCategories)[number] | null>(null);
 
