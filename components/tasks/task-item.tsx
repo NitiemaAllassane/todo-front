@@ -23,10 +23,16 @@ const priorityStyles: Record<TaskPriority, string> = {
   LOW: "bg-green-100 text-green-700 hover:bg-green-100",
 };
 
+const priorityLabels: Record<TaskPriority, string> = {
+  HIGH: "Haute",
+  MEDIUM: "Moyenne",
+  LOW: "Basse",
+};
+
 const statusConfig: Record<TaskStatus, { label: string; className: string; icon: typeof Clock }> = {
   TODO: { label: "à faire", className: "text-muted-foreground", icon: Clock },
-  IN_PROGRESS: { label: "in-progress", className: "text-blue-600", icon: Loader2 },
-  DONE: { label: "completed", className: "text-green-600", icon: CheckCircle2 },
+  IN_PROGRESS: { label: "en cours", className: "text-blue-600", icon: Loader2 },
+  DONE: { label: "terminée", className: "text-green-600", icon: CheckCircle2 },
 };
 
 export function TaskItem({
@@ -52,7 +58,7 @@ export function TaskItem({
               {title}
             </span>
             <Badge variant="secondary" className={priorityStyles[priority]}>
-              {priority.toLowerCase()}
+              {priorityLabels[priority]}
             </Badge>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">

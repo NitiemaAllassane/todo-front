@@ -1,13 +1,12 @@
-/* eslint-disable react/no-unescaped-entities */
 import { Calendar, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const scheduleItems = [
-  { time: "09:00", title: "Team Standup", tag: "meeting" },
-  { time: "11:30", title: "Design Review", tag: "review" },
-  { time: "14:00", title: "Client Call", tag: "call" },
-  { time: "16:30", title: "Project Planning", tag: "planning" },
+  { time: "09:00", title: "Réunion d'équipe", tag: "réunion" },
+  { time: "11:30", title: "Revue de design", tag: "révision" },
+  { time: "14:00", title: "Appel client", tag: "appel" },
+  { time: "16:30", title: "Planification projet", tag: "planification" },
 ];
 
 export function SchedulePanel() {
@@ -16,11 +15,11 @@ export function SchedulePanel() {
       <div className="mb-4 flex items-center justify-between">
         <h3 className="flex items-center gap-2 font-semibold">
           <Calendar className="h-4 w-4" />
-          Today's Schedule
+          Planning du jour
         </h3>
         <Button variant="ghost" size="sm">
           <Plus className="h-4 w-4" />
-          Add
+          Ajouter
         </Button>
       </div>
 

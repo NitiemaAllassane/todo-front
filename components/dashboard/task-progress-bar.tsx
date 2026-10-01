@@ -11,7 +11,7 @@ export function TaskProgressBar({ completed, total }: TaskProgressBarProps) {
   return (
     <div className="space-y-2">
       <p className="text-sm text-muted-foreground">
-        {completed} of {total} tasks completed
+        {completed} tâche{completed > 1 ? "s" : ""} sur {total} terminée{total > 1 ? "s" : ""}
       </p>
       <Progress value={percentage} className="h-2" />
     </div>
