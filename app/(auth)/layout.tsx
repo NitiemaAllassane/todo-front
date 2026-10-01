@@ -1,4 +1,5 @@
 import { CheckCircle2, ListTodo, FolderKanban, Zap } from "lucide-react";
+import Link from "next/link";
 
 const features = [
   { icon: ListTodo, text: "Organise tes tâches par priorité et échéance" },
@@ -18,7 +19,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <div className="space-y-8">
-          <h1 className="text-3xl font-bold leading-tight">
+          <h1 className="text-4xl font-bold leading-tight">
             Organise tes journées, atteins tes objectifs.
           </h1>
           <div className="space-y-4">
@@ -27,14 +28,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-foreground/10">
                   <feature.icon className="h-4 w-4" />
                 </div>
-                <p className="text-sm text-primary-foreground/90">{feature.text}</p>
+                <p className="text-lg text-primary-foreground/90">{feature.text}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="text-sm text-primary-foreground/60">
-          © 2026 TaskFlow. Fait avec soin.
+        <p className="text-sm text-white">
+          © 2026 TaskFlow. Fait avec soin par <Link href="https://nitiema-allassane.vercel.app/about" target="_blank">Nitiema Allassane</Link>.
         </p>
       </div>
 
