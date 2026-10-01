@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TaskCard } from "@/components/tasks/task-card";
+import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
+import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
+import type { TaskFormValues } from "@/lib/validations/task.schema";
 
 // Données factices — à remplacer par GET /tasks
 const mockTasks = [
@@ -19,37 +22,15 @@ const mockTasks = [
     categoryName: "Refonte du site",
     completed: false,
   },
-  {
-    id: "2",
-    title: "Mettre à jour le flux d'authentification",
-    description: "Système d'auth avec sécurité renforcée",
-    priority: "HIGH" as const,
-    status: "IN_PROGRESS" as const,
-    dueDate: "01/10/2026",
-    categoryName: "Système d'authentification",
-    completed: false,
-  },
-  {
-    id: "3",
-    title: "Rédiger la documentation de la nouvelle API",
-    description: "Documentation complète de l'API",
-    priority: "MEDIUM" as const,
-    status: "TODO" as const,
-    dueDate: "02/10/2026",
-    categoryName: "Documentation API",
-    completed: false,
-  },
-  {
-    id: "4",
-    title: "Déployer en préproduction",
-    priority: "LOW" as const,
-    status: "DONE" as const,
-    dueDate: "28/09/2026",
-    categoryName: "Refonte du site",
-    completed: true,
-  },
+  // ... (le reste de tes mockTasks)
 ];
 
+// Données factices — à remplacer par GET /categories
+const mockCategories = [
+  { id: "cat-1", name: "Refonte du site" },
+  { id: "cat-2", name: "Système d'authentification" },
+  { id: "cat-3", name: "Documentation API" },
+];
 
 const priorityItems = [
   { value: "all", label: "Toutes les priorités" },
@@ -58,18 +39,54 @@ const priorityItems = [
   { value: "LOW", label: "Basse" },
 ];
 
-const categoryItems = [
+const categoryFilterItems = [
   { value: "all", label: "Toutes les catégories" },
-  // à remplir avec GET /categories une fois branché
+  ...mockCategories.map((c) => ({ value: c.id, label: c.name })),
 ];
-
 
 export default function TasksPage() {
   const [tab, setTab] = useState<"active" | "completed">("active");
 
+  // État pour la Dialog création/édition
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<(typeof mockTasks)[number] | null>(null);
+
+  // État pour la confirmation de suppression
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
+
   const activeTasks = mockTasks.filter((t) => !t.completed);
   const completedTasks = mockTasks.filter((t) => t.completed);
   const visibleTasks = tab === "active" ? activeTasks : completedTasks;
+
+  function handleCreateClick() {
+    setEditingTask(null); // mode création → formulaire vide
+    setDialogOpen(true);
+  }
+
+  function handleEditClick(task: (typeof mockTasks)[number]) {
+    setEditingTask(task); // mode édition → formulaire pré-rempli
+    setDialogOpen(true);
+  }
+
+  function handleDeleteClick(taskId: string) {
+    setDeletingTaskId(taskId);
+  }
+
+  function handleFormSubmit(values: TaskFormValues) {
+    if (editingTask) {
+      // plus tard : PATCH /tasks/:id
+      console.log("Modifier la tâche", editingTask.id, values);
+    } else {
+      // plus tard : POST /tasks
+      console.log("Créer une tâche", values);
+    }
+  }
+
+  function handleConfirmDelete() {
+    // plus tard : DELETE /tasks/:id
+    console.log("Supprimer la tâche", deletingTaskId);
+    setDeletingTaskId(null);
+  }
 
   return (
     <div className="space-y-6">
@@ -78,7 +95,7 @@ export default function TasksPage() {
           <h1 className="text-2xl font-bold">Tâches</h1>
           <p className="text-muted-foreground">Gère et suis tes tâches sur tous tes projets.</p>
         </div>
-        <Button>
+        <Button onClick={handleCreateClick}>
           <Plus className="h-4 w-4" />
           Nouvelle tâche
         </Button>
@@ -93,30 +110,30 @@ export default function TasksPage() {
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Priorité</label>
             <Select defaultValue="all" items={priorityItems}>
-							<SelectTrigger>
-									<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-									{priorityItems.map((item) => (
-									<SelectItem key={item.value} value={item.value}>
-											{item.label}
-									</SelectItem>
-									))}
-							</SelectContent>
-							</Select>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Catégorie</label>
-            <Select defaultValue="all" items={categoryItems}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {categoryItems.map((item) => (
-									<SelectItem key={item.value} value={item.value}>
-											{item.label}
-									</SelectItem>
-								))}
+                {priorityItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Catégorie</label>
+            <Select defaultValue="all" items={categoryFilterItems}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {categoryFilterItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -138,9 +155,30 @@ export default function TasksPage() {
 
       <div className="grid grid-cols-3 gap-4">
         {visibleTasks.map((task) => (
-          <TaskCard key={task.id} {...task} />
+          <TaskCard
+            key={task.id}
+            {...task}
+            onEdit={() => handleEditClick(task)}
+            onDelete={() => handleDeleteClick(task.id)}
+          />
         ))}
       </div>
+
+      <TaskFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        defaultValues={editingTask ?? undefined}
+        categories={mockCategories}
+        onSubmit={handleFormSubmit}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingTaskId}
+        onOpenChange={() => setDeletingTaskId(null)}
+        title="Supprimer cette tâche ?"
+        description="Cette action est irréversible. La tâche sera définitivement supprimée."
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }
