@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -7,8 +9,12 @@ import { Field, FieldLabel, FieldError, FieldGroup } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth.schema";
+import { loginUser } from "@/lib/auth";
 
 export function LoginForm() {
+  const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -18,9 +24,16 @@ export function LoginForm() {
     defaultValues: { email: "", password: "" },
   });
 
-  function onSubmit(values: LoginFormValues) {
-    // branché plus tard sur POST /auth/login
-    console.log(values);
+  // Soumission du formulaire
+  async function onSubmit(values: LoginFormValues) {
+    setServerError(null);
+
+    try {
+      await loginUser(values);
+      router.push('/');
+    } catch (error) {
+      setServerError(error instanceof Error ? error.message: "Une erreur est survenue")
+    }
   }
 
   return (
@@ -31,6 +44,10 @@ export function LoginForm() {
           Connecte-toi pour retrouver tes tâches.
         </p>
       </div>
+
+      {serverError && (
+        <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{serverError}</p>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <FieldGroup>

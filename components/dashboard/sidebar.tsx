@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, ListTodo, FolderKanban, User, LogOut, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logoutUser } from "@/lib/auth";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -13,6 +15,17 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter()
+
+  async function handleLogout() {
+    try {
+      await logoutUser();
+      router.push("/login");
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion", error);
+    }
+  }
+
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-background">
@@ -52,7 +65,12 @@ export function Sidebar() {
           <User className="h-4 w-4" />
           Profil
         </Link>
-        <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10">
+        <button 
+          className="flex w-full items-center gap-3 rounded-lg px-3 
+          py-2 text-sm font-medium text-destructive 
+          hover:bg-destructive/10 cursor-pointer"
+          onClick={() => handleLogout()}
+        >
           <LogOut className="h-4 w-4" />
           Déconnexion
         </button>

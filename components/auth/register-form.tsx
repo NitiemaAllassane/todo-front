@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -12,8 +14,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations/auth.schema";
+import { registerUser } from "@/lib/auth";
+
+
 
 export function RegisterForm() {
+  const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -23,9 +31,16 @@ export function RegisterForm() {
     defaultValues: { fullname: "", email: "", phone: "", password: "" },
   });
 
-  function onSubmit(values: RegisterFormValues) {
-    // branché plus tard sur POST /auth/register
-    console.log(values);
+  async function onSubmit(values: RegisterFormValues) {
+    setServerError(null);
+
+    try {
+      await registerUser(values);
+      router.push("/")
+    } catch (error) {
+      setServerError(error instanceof Error ? error.message : "Une erreur est survenue")
+    }
+    
   }
 
   return (
@@ -36,6 +51,10 @@ export function RegisterForm() {
           Rejoins TaskFlow et reprends le contrôle de tes tâches.
         </p>
       </div>
+
+      {serverError && (
+        <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{serverError}</p>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <FieldGroup>
