@@ -1,9 +1,10 @@
 /* eslint-disable react/no-unescaped-entities */
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { getCurrentUserServer } from "@/lib/users";
+import { capitalizeWords } from "@/lib/utils";
+import { redirect } from "next/navigation";
 
-// À remplacer plus tard par les vraies données du user connecté (GET /users/me)
-const user = { fullname: "Nitiema Allassane" };
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -12,8 +13,24 @@ function getGreeting() {
   return "Bonsoir";
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const firstName = user.fullname.split(" ")[0];
+function getInitials(fullname: string) {
+  return fullname
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUserServer();
+
+  if (!user) {
+    redirect('/register');
+  }
+
+  const firstName = capitalizeWords(user?.fullname);
+  const initials =  getInitials(user.fullname);
 
   return (
     <div className="flex h-screen">
@@ -21,7 +38,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex items-center gap-4 border-b px-6 py-6">
           <Avatar className="h-12 w-12">
-            <AvatarFallback className="text-base">JD</AvatarFallback>
+            <AvatarFallback className="text-base">
+              {initials}
+            </AvatarFallback>
           </Avatar>
           <div>
             <h2 className="text-xl font-semibold">

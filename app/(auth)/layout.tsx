@@ -1,5 +1,7 @@
 import { CheckCircle2, ListTodo, FolderKanban, Zap } from "lucide-react";
 import Link from "next/link";
+import { getCurrentUserServer } from "@/lib/users";
+import { redirect } from "next/navigation";
 
 const features = [
   { icon: ListTodo, text: "Organise tes tâches par priorité et échéance" },
@@ -7,7 +9,13 @@ const features = [
   { icon: Zap, text: "Reste concentré sur ce qui compte vraiment" },
 ];
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUserServer();
+
+  if (user) {
+    redirect('/');
+  }
+
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between bg-primary p-10 text-primary-foreground lg:flex">
