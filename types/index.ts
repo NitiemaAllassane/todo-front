@@ -12,6 +12,7 @@ export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
 export type Category = {
   id: string;
   name: string;
+  taskCount?: number;
 };
 
 export type Task = {

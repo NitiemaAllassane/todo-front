@@ -43,7 +43,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         </div>
 
         <p className="text-sm text-white">
-          © 2026 TaskFlow. Fait avec soin par <Link href="https://nitiema-allassane.vercel.app/about" target="_blank">Nitiema Allassane</Link>.
+          &copy; 2026 TaskFlow. Fait avec soin par <Link href="https://nitiema-allassane.vercel.app/about" target="_blank">Nitiema Allassane</Link>.
         </p>
       </div>
 

@@ -46,7 +46,7 @@ export function CategoryFormDialog({
     }
   }, [open, defaultValues, reset]);
 
-  function handleFormSubmit(values: CategoryFormValues) {
+  async function handleFormSubmit(values: CategoryFormValues) {
     onSubmit(values);
     onOpenChange(false);
   }
