@@ -1,5 +1,6 @@
 "use client";
 
+import useSWR, { mutate as globalMutate} from "swr";
 import { useState } from "react";
 import { Plus, Filter, Target, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import type { TaskFormValues } from "@/lib/validations/task.schema";
 import type { Task } from "@/types";
 import { getTasks, createTask, updateTask, deleteTask } from "@/lib/tasks";
 import { getCategories } from "@/lib/categories";
-import useSWR from "swr";
 import { FolderX, LoaderCircle, CircleX } from "lucide-react";
 
 // Liste statique — pas besoin d'API, ce sont juste les libellés d'affichage
@@ -68,6 +68,7 @@ export default function TasksPage() {
       await createTask(values);
     }
     await mutate();
+    await globalMutate("/categories")
   }
 
   async function handleConfirmDelete() {
