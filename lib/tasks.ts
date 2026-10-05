@@ -14,7 +14,7 @@ export async function createTask(data: TaskFormValues) {
   });
 }
 
-export async function updateTask(id: string, data: TaskFormValues) {
+export async function updateTask(id: string, data: Partial<TaskFormValues>) {
   return apiFetch<Task>(`/tasks/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),

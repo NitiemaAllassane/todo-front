@@ -72,6 +72,12 @@ export default function TasksPage() {
     setDeletingTaskId(null);
   }
 
+  async function handleToggleComplete(task: Task) {
+    const newStatus = task.status === "DONE" ? "TODO" : "DONE";
+    await updateTask(task.id, { status: newStatus });
+    await mutate();
+  } 
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -172,6 +178,7 @@ export default function TasksPage() {
               completed={task.status === "DONE"}
               onEdit={() => handleEditClick(task)}
               onDelete={() => handleDeleteClick(task.id)}
+              onToggle={() => handleToggleComplete(task)}
             />
           ))}
         </div>
