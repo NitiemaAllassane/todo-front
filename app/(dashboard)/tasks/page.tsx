@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { useState } from "react";
@@ -9,29 +10,13 @@ import { TaskCard } from "@/components/tasks/task-card";
 import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import type { TaskFormValues } from "@/lib/validations/task.schema";
+import type { Task } from "@/types";
+import { getTasks, createTask, updateTask, deleteTask } from "@/lib/tasks";
+import { getCategories } from "@/lib/categories";
+import useSWR from "swr";
+import { FolderX, LoaderCircle, CircleX } from "lucide-react";
 
-// Données factices — à remplacer par GET /tasks
-const mockTasks = [
-  {
-    id: "1",
-    title: "Revoir les maquettes de la landing page",
-    description: "Revue et retour sur les maquettes de la landing page",
-    priority: "HIGH" as const,
-    status: "IN_PROGRESS" as const,
-    dueDate: "01/10/2026",
-    categoryName: "Refonte du site",
-    completed: false,
-  },
-  // ... (le reste de tes mockTasks)
-];
-
-// Données factices — à remplacer par GET /categories
-const mockCategories = [
-  { id: "cat-1", name: "Refonte du site" },
-  { id: "cat-2", name: "Système d'authentification" },
-  { id: "cat-3", name: "Documentation API" },
-];
-
+// Liste statique — pas besoin d'API, ce sont juste les libellés d'affichage
 const priorityItems = [
   { value: "all", label: "Toutes les priorités" },
   { value: "HIGH", label: "Haute" },
@@ -39,32 +24,31 @@ const priorityItems = [
   { value: "LOW", label: "Basse" },
 ];
 
-const categoryFilterItems = [
-  { value: "all", label: "Toutes les catégories" },
-  ...mockCategories.map((c) => ({ value: c.id, label: c.name })),
-];
-
 export default function TasksPage() {
+  const { data: tasks, error, isLoading, mutate } = useSWR("/tasks", getTasks);
+  const { data: categories } = useSWR("/categories", getCategories);
+
   const [tab, setTab] = useState<"active" | "completed">("active");
-
-  // État pour la Dialog création/édition
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<(typeof mockTasks)[number] | null>(null);
-
-  // État pour la confirmation de suppression
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
-  const activeTasks = mockTasks.filter((t) => !t.completed);
-  const completedTasks = mockTasks.filter((t) => t.completed);
+  const activeTasks = tasks?.filter((t) => t.status !== "DONE") ?? [];
+  const completedTasks = tasks?.filter((t) => t.status === "DONE") ?? [];
   const visibleTasks = tab === "active" ? activeTasks : completedTasks;
 
+  const categoryFilterItems = [
+    { value: "all", label: "Toutes les catégories" },
+    ...(categories ?? []).map((c) => ({ value: c.id, label: c.name })),
+  ];
+
   function handleCreateClick() {
-    setEditingTask(null); // mode création → formulaire vide
+    setEditingTask(null);
     setDialogOpen(true);
   }
 
-  function handleEditClick(task: (typeof mockTasks)[number]) {
-    setEditingTask(task); // mode édition → formulaire pré-rempli
+  function handleEditClick(task: Task) {
+    setEditingTask(task);
     setDialogOpen(true);
   }
 
@@ -72,19 +56,19 @@ export default function TasksPage() {
     setDeletingTaskId(taskId);
   }
 
-  function handleFormSubmit(values: TaskFormValues) {
+  async function handleFormSubmit(values: TaskFormValues) {
     if (editingTask) {
-      // plus tard : PATCH /tasks/:id
-      console.log("Modifier la tâche", editingTask.id, values);
+      await updateTask(editingTask.id, values);
     } else {
-      // plus tard : POST /tasks
-      console.log("Créer une tâche", values);
+      await createTask(values);
     }
+    await mutate();
   }
 
-  function handleConfirmDelete() {
-    // plus tard : DELETE /tasks/:id
-    console.log("Supprimer la tâche", deletingTaskId);
+  async function handleConfirmDelete() {
+    if (!deletingTaskId) return;
+    await deleteTask(deletingTaskId);
+    await mutate();
     setDeletingTaskId(null);
   }
 
@@ -153,22 +137,51 @@ export default function TasksPage() {
         </TabsList>
       </Tabs>
 
-      <div className="grid grid-cols-3 gap-4">
-        {visibleTasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            {...task}
-            onEdit={() => handleEditClick(task)}
-            onDelete={() => handleDeleteClick(task.id)}
-          />
-        ))}
-      </div>
+      {isLoading && (
+        <div className="rounded-xl border border-dashed p-12 text-center text-muted-foreground">
+          <LoaderCircle className="mx-auto mb-3 h-10 w-10 animate-spin opacity-50" />
+          <p>Chargement en cours...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-xl border border-dashed p-12 text-center text-muted-foreground">
+          <CircleX className="mx-auto mb-3 h-10 w-10 text-destructive opacity-50" />
+          <p>Une erreur est survenue</p>
+        </div>
+      )}
+
+      {!isLoading && !error && tasks && tasks.length === 0 && (
+        <div className="rounded-xl border border-dashed p-12 text-center text-muted-foreground">
+          <FolderX className="mx-auto mb-3 h-10 w-10 opacity-50" />
+          <p>Aucune tache pour l'instant.</p>
+        </div>
+      )}
+
+      {!isLoading && !error && (
+        <div className="grid grid-cols-3 gap-4">
+          {visibleTasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              title={task.title}
+              description={task.description}
+              priority={task.priority}
+              status={task.status}
+              dueDate={task.dueDate}
+              categoryName={task.category?.name}
+              completed={task.status === "DONE"}
+              onEdit={() => handleEditClick(task)}
+              onDelete={() => handleDeleteClick(task.id)}
+            />
+          ))}
+        </div>
+      )}
 
       <TaskFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         defaultValues={editingTask ?? undefined}
-        categories={mockCategories}
+        categories={categories ?? []}
         onSubmit={handleFormSubmit}
       />
 
