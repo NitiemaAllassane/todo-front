@@ -24,6 +24,7 @@ export type Task = {
   startDate?: string;
   dueDate?: string;
   category?: Category;
+   categoryId?: string;
   createdAt: string;
   updatedAt: string;
 };

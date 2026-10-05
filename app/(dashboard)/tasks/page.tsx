@@ -32,10 +32,21 @@ export default function TasksPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
+  // * Etat de filtre
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+
   const allTasks: Task[] = tasks ?? [];
   const activeTasks = tasks?.filter((t) => t.status !== "DONE") ?? [];
   const completedTasks = tasks?.filter((t) => t.status === "DONE") ?? [];
-  const visibleTasks = tab === "all" ? allTasks : tab === "active" ?  activeTasks : completedTasks;
+  const baseTasks = tab === "all" ? allTasks : tab === "active" ? activeTasks : completedTasks;
+
+  const visibleTasks = baseTasks.filter((task) => {
+    const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
+    const matchesCategory = categoryFilter === "all" || task.categoryId === categoryFilter;
+    return matchesPriority && matchesCategory;
+  });
+  
   const emptyStateMessages = {
     all: "Aucune tâche pour l'instant.",
     active: "Aucune tâche active. Tout est à jour !",
@@ -105,7 +116,11 @@ export default function TasksPage() {
         <div className="flex items-center gap-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Priorité</label>
-            <Select defaultValue="all" items={priorityItems}>
+            <Select 
+              value={priorityFilter} 
+              onValueChange={(value) => setPriorityFilter(value ?? "all")} 
+              items={priorityItems}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -120,7 +135,11 @@ export default function TasksPage() {
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Catégorie</label>
-            <Select defaultValue="all" items={categoryFilterItems}>
+            <Select 
+              value={categoryFilter} 
+              onValueChange={(value) => setCategoryFilter(value ?? "all")} 
+              items={categoryFilterItems}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
