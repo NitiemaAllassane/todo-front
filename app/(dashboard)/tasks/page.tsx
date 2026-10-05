@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { useState } from "react";
@@ -28,14 +27,20 @@ export default function TasksPage() {
   const { data: tasks, error, isLoading, mutate } = useSWR("/tasks", getTasks);
   const { data: categories } = useSWR("/categories", getCategories);
 
-  const [tab, setTab] = useState<"active" | "completed">("active");
+  const [tab, setTab] = useState<"all" | "active" | "completed">("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
+  const allTasks: Task[] = tasks ?? [];
   const activeTasks = tasks?.filter((t) => t.status !== "DONE") ?? [];
   const completedTasks = tasks?.filter((t) => t.status === "DONE") ?? [];
-  const visibleTasks = tab === "active" ? activeTasks : completedTasks;
+  const visibleTasks = tab === "all" ? allTasks : tab === "active" ?  activeTasks : completedTasks;
+  const emptyStateMessages = {
+    all: "Aucune tâche pour l'instant.",
+    active: "Aucune tâche active. Tout est à jour !",
+    completed: "Aucune tâche terminée pour l'instant.",
+  };
 
   const categoryFilterItems = [
     { value: "all", label: "Toutes les catégories" },
@@ -130,8 +135,12 @@ export default function TasksPage() {
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as "active" | "completed")}>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "all" | "active" | "completed")}>
         <TabsList>
+          <TabsTrigger value="all" className="gap-2">
+            <Target className="h-4 w-4" />
+            Toutes les taches ({allTasks.length})
+          </TabsTrigger>
           <TabsTrigger value="active" className="gap-2">
             <Target className="h-4 w-4" />
             Actives ({activeTasks.length})
@@ -157,12 +166,13 @@ export default function TasksPage() {
         </div>
       )}
 
-      {!isLoading && !error && tasks && tasks.length === 0 && (
+      {!isLoading && !error && tasks && visibleTasks.length === 0 && (
         <div className="rounded-xl border border-dashed p-12 text-center text-muted-foreground">
           <FolderX className="mx-auto mb-3 h-10 w-10 opacity-50" />
-          <p>Aucune tache pour l'instant.</p>
+          <p>{emptyStateMessages[tab]}</p>
         </div>
       )}
+
 
       {!isLoading && !error && (
         <div className="grid grid-cols-3 gap-4">
