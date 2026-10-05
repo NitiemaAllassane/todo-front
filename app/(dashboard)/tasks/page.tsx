@@ -14,6 +14,7 @@ import type { Task } from "@/types";
 import { getTasks, createTask, updateTask, deleteTask } from "@/lib/tasks";
 import { getCategories } from "@/lib/categories";
 import { FolderX, LoaderCircle, CircleX } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 // Liste statique — pas besoin d'API, ce sont juste les libellés d'affichage
 const priorityItems = [
@@ -203,7 +204,7 @@ export default function TasksPage() {
               description={task.description}
               priority={task.priority}
               status={task.status}
-              dueDate={task.dueDate}
+              dueDate={formatDate(task.dueDate)}
               categoryName={task.category?.name}
               completed={task.status === "DONE"}
               onEdit={() => handleEditClick(task)}
