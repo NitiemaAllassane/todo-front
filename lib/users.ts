@@ -25,5 +25,5 @@ export async function getCurrentUserServer(): Promise<User | null> {
 
 
 export async function getCurrentUser() {
-  return apiFetch<User>("/users/me");
+  return apiFetch<User>("/users/profil");
 }
