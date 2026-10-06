@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import type { User } from "@/types";
-import { apiFetch } from "./api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -24,6 +23,3 @@ export async function getCurrentUserServer(): Promise<User | null> {
 
 
 
-export async function getCurrentUser() {
-  return apiFetch<User>("/users/profil");
-}

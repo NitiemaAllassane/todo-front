@@ -3,22 +3,16 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Pencil, X, Trash2 } from "lucide-react";
+import { Pencil, X, Trash2, LoaderCircle, CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Field, FieldLabel, FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import { profileSchema, type ProfileFormValues } from "@/lib/validations/profile.schema";
-import type { User } from "@/types";
-
-// TODO (étape 1 — récupération) : remplacer par le vrai user chargé depuis GET /users/me
-const mockUser: User = {
-  id: "placeholder",
-  fullname: "Nitiema Allassane",
-  email: "allassane@example.com",
-  phone: "0799918349",
-};
+import useSWR, { mutate as globalMutate } from "swr";
+import { getCurrentUser, updateProfile, deleteAccount } from "@/lib/users.client";
+import { useRouter } from "next/navigation";
 
 function getInitials(fullname: string) {
   return fullname
@@ -30,10 +24,13 @@ function getInitials(fullname: string) {
 }
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<User>(mockUser);
+  const { data: currentUser, error, isLoading, mutate } = useSWR("/users/profil", getCurrentUser);
+
   const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+
+  const router = useRouter();
 
   const {
     register,
@@ -43,14 +40,14 @@ export default function ProfilePage() {
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      fullname: user.fullname,
-      email: user.email,
-      phone: user.phone,
+      fullname: currentUser?.fullname,
+      email: currentUser?.email,
+      phone: currentUser?.phone,
     },
   });
 
   function handleEditClick() {
-    reset({ fullname: user.fullname, email: user.email, phone: user.phone });
+    reset({ fullname: currentUser?.fullname, email: currentUser?.email, phone: currentUser?.phone });
     setServerError(null);
     setIsEditing(true);
   }
@@ -63,9 +60,10 @@ export default function ProfilePage() {
   async function onSubmit(values: ProfileFormValues) {
     setServerError(null);
     try {
-      // TODO (étape 2 — modification) : appeler updateProfile(values) ici
-      // puis mettre à jour `user` avec la réponse, et fermer le mode édition
-      console.log("À brancher :", values);
+      await updateProfile(values);
+      await mutate();
+      await globalMutate("/users/profil");
+      setIsEditing(false);
     } catch (error) {
       setServerError(error instanceof Error ? error.message : "Une erreur est survenue");
     }
@@ -73,9 +71,8 @@ export default function ProfilePage() {
 
   async function handleConfirmDelete() {
     try {
-      // TODO (étape 3 — suppression) : appeler deleteAccount() ici,
-      // puis rediriger vers /login (le compte n'existe plus, pas de logout séparé nécessaire)
-      console.log("Suppression à brancher");
+      await deleteAccount();
+      router.push("/login");
     } catch (error) {
       console.error(error);
     }
@@ -91,9 +88,9 @@ export default function ProfilePage() {
       <div className="rounded-xl border bg-card p-6">
         <div className="mb-6 flex items-center gap-4">
           <Avatar className="h-16 w-16">
-            <AvatarFallback className="text-lg">{getInitials(user.fullname)}</AvatarFallback>
+            <AvatarFallback className="text-lg">{getInitials(currentUser?.fullname ?? "NA")}</AvatarFallback>
           </Avatar>
-          {!isEditing && (
+          {!isEditing && currentUser && (
             <Button variant="outline" size="sm" onClick={handleEditClick} className="ml-auto">
               <Pencil className="h-4 w-4" />
               Modifier
@@ -107,23 +104,39 @@ export default function ProfilePage() {
           </p>
         )}
 
-        {!isEditing ? (
+        {isLoading && (
+          <div className="rounded-xl border border-dashed p-12 text-center text-muted-foreground">
+            <LoaderCircle className="mx-auto mb-3 h-10 w-10 animate-spin opacity-50" />
+            <p>Chargement en cours...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="rounded-xl border border-dashed p-12 text-center text-muted-foreground">
+            <CircleX className="mx-auto mb-3 h-10 w-10 text-destructive opacity-50" />
+            <p>Impossible de charger le profil.</p>
+          </div>
+        )}
+
+        {!isLoading && !error && currentUser && !isEditing && (
           // ---- MODE LECTURE SEULE ----
           <div className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">Nom complet</p>
-              <p className="font-medium">{user.fullname}</p>
+              <p className="font-medium">{currentUser.fullname}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium">{user.email}</p>
+              <p className="font-medium">{currentUser.email}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Téléphone</p>
-              <p className="font-medium">{user.phone}</p>
+              <p className="font-medium">{currentUser.phone}</p>
             </div>
           </div>
-        ) : (
+        )}
+
+        {!isLoading && !error && currentUser && isEditing && (
           // ---- MODE ÉDITION ----
           <form onSubmit={handleSubmit(onSubmit)}>
             <FieldGroup>
