@@ -28,3 +28,10 @@ export type Task = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type ScheduleItem = {
+  id: string;
+  title: string;
+  time: string;
+  tag?: string;
+};

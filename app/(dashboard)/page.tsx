@@ -2,7 +2,7 @@
 "use client";
 
 import useSWR, { mutate as globalMutate } from "swr";
-import { Target, CheckCircle2, Loader2, AlertTriangle } from "lucide-react";
+import { Target, CheckCircle2, Loader2, AlertTriangle, Ghost } from "lucide-react";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { TaskProgressBar } from "@/components/dashboard/task-progress-bar";
 import { TaskItem } from "@/components/tasks/task-item";
@@ -71,9 +71,10 @@ export default function DashboardPage() {
               <TaskProgressBar completed={completed} total={total} />
 
               {recentTasks.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  Aucune tâche pour l'instant.
-                </p>
+                <div className="rounded-xl border border-dashed p-12 text-center text-muted-foreground">
+                  <Ghost className="mx-auto mb-3 h-10 w-10 opacity-50" />
+                  <p>Aucune taches pour l'instant</p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {recentTasks.map((task) => (
